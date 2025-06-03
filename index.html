@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Estacionamento</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #4a5568;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+
+        .controls {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-section h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .parking-grid {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .parking-grid h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-items: center;
+        }
+
+        .parking-spot {
+            width: 80px;
+            height: 60px;
+            border: 3px solid #e2e8f0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: white;
+        }
+
+        .parking-spot.occupied {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+            border-color: #e53e3e;
+        }
+
+        .parking-spot.free {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border-color: #38a169;
+        }
+
+        .parking-spot:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .ticket {
+            background: linear-gradient(135deg, #fbb6ce 0%, #f687b3 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 2px dashed #e2e8f0;
+        }
+
+        .ticket h4 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        .ticket-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .ticket-info div {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: 600;
+            text-align: center;
+            animation: slideIn 0.5s ease;
+        }
+
+        .message.success {
+            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+            color: #22543d;
+            border: 2px solid #68d391;
+        }
+
+        .message.error {
+            background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+            color: #742a2a;
+            border: 2px solid #fc8181;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #bee3f8 0%, #90cdf4 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h4 {
+            color: #2c5282;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            color: #2a69ac;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .grid-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .parking-spot {
+                width: 70px;
+                height: 50px;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 Sistema de Estacionamento</h1>
+            <p>Gerencie vagas com estilo e eficiência</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h4 id="totalSpots">25</h4>
+                <p>Total de Vagas</p>
+            </div>
+            <div class="stat-card">
+                <h4 id="occupiedSpots">0</h4>
+                <p>Vagas Ocupadas</p>
+            </div>
+            <div class="stat-card">
+                <h4 id="freeSpots">25</h4>
+                <p>Vagas Livres</p>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="controls">
+                <div class="form-section">
+                    <h3>🚙 Entrada de Veículo</h3>
+                    <div class="form-group">
+                        <label for="placaEntrada">Placa (LLLNLNN):</label>
+                        <input type="text" id="placaEntrada" placeholder="ABC1D23" maxlength="7">
+                    </div>
+                    <div class="form-group">
+                        <label for="dataEntrada">Data de Entrada:</label>
+                        <input type="date" id="dataEntrada">
+                    </div>
+                    <div class="form-group">
+                        <label for="horaEntrada">Hora de Entrada:</label>
+                        <input type="time" id="horaEntrada">
+                    </div>
+                    <button class="btn" onclick="adicionarVeiculo()">Estacionar Veículo</button>
+                </div>
+
+                <div class="form-section">
+                    <h3>🚗 Saída de Veículo</h3>
+                    <div class="form-group">
+                        <label for="placaSaida">Placa:</label>
+                        <input type="text" id="placaSaida" placeholder="ABC1D23" maxlength="7">
+                    </div>
+                    <div class="form-group">
+                        <label for="dataSaida">Data de Saída:</label>
+                        <input type="date" id="dataSaida">
+                    </div>
+                    <div class="form-group">
+                        <label for="horaSaida">Hora de Saída:</label>
+                        <input type="time" id="horaSaida">
+                    </div>
+                    <button class="btn" onclick="removerVeiculo()">Processar Saída</button>
+                </div>
+            </div>
+
+            <div class="parking-grid">
+                <h3>🅿️ Mapa do Estacionamento</h3>
+                <div class="grid-container" id="parkingGrid">
+                    <!-- Vagas serão geradas pelo JavaScript -->
+                </div>
+                
+                <div id="ticketContainer"></div>
+            </div>
+        </div>
+
+        <div id="messageContainer"></div>
+    </div>
+
+    <script>
+        // Configurações
+        const M = 5, N = 5;
+        let estacionamento = [];
+        
+        // Inicializar matriz
+        for (let i = 0; i < M; i++) {
+            estacionamento[i] = [];
+            for (let j = 0; j < N; j++) {
+                estacionamento[i][j] = null;
+            }
+        }
+
+        // Faixas de placas por estado (dados oficiais DENATRAN)
+        const prefixosPorEstado = {
+            "AC": ["NAA", "NBA"],        // Acre
+            "AL": ["PQA", "PQZ"],        // Alagoas
+            "AP": ["NUA", "NUZ"],        // Amapá
+            "AM": ["NAB", "NEZ"],        // Amazonas
+            "BA": ["JAA", "JDZ"],        // Bahia
+            "CE": ["JWA", "JXZ"],        // Ceará
+            "DF": ["JKA", "JKZ"],        // Distrito Federal
+            "ES": ["MTA", "MTZ"],        // Espírito Santo
+            "GO": ["JWA", "JXZ"],        // Goiás
+            "MA": ["JVA", "JVZ"],        // Maranhão
+            "MT": ["JUA", "JUZ"],        // Mato Grosso
+            "MS": ["JTA", "JTZ"],        // Mato Grosso do Sul
+            "MG": ["HAA", "HZZ"],        // Minas Gerais
+            "PA": ["NEA", "NFZ"],        // Pará
+            "PB": ["PRG", "PRZ"],        // Paraíba
+            "PR": ["AAA", "AUZ"],        // Paraná
+            "PE": ["JYA", "JZZ"],        // Pernambuco
+            "PI": ["JVA", "JVZ"],        // Piauí
+            "RJ": ["KMA", "LVZ"],        // Rio de Janeiro
+            "RN": ["PRA", "PRF"],        // Rio Grande do Norte
+            "RS": ["IAA", "JDZ"],        // Rio Grande do Sul
+            "RO": ["NBC", "NEA"],        // Rondônia
+            "RR": ["NTZ", "NUA"],        // Roraima
+            "SC": ["MAA", "MZZ"],        // Santa Catarina
+            "SP": ["BFA", "GEZ"],        // São Paulo
+            "SE": ["PSA", "PSZ"],        // Sergipe
+            "TO": ["JVA", "JVZ"]         // Tocantins
+        };
+
+        // Regiões do Brasil
+        const regioesBrasil = {
+            "Norte": ["AC", "AP", "AM", "PA", "RO", "RR", "TO"],
+            "Nordeste": ["AL", "BA", "CE", "MA", "PB", "PE", "PI", "RN", "SE"],
+            "Centro-Oeste": ["DF", "GO", "MT", "MS"],
+            "Sudeste": ["ES", "MG", "RJ", "SP"],
+            "Sul": ["PR", "RS", "SC"]
+        };
+
+        // Valores
+        const valorAte3h = 10.00;
+        const valorPorHoraExtra = 5.00;
+
+        // Inicializar interface
+        function inicializarInterface() {
+            criarGridEstacionamento();
+            definirDataHoraAtual();
+            atualizarEstatisticas();
+        }
+
+        function criarGridEstacionamento() {
+            const grid = document.getElementById('parkingGrid');
+            grid.innerHTML = '';
+            
+            for (let i = 0; i < M; i++) {
+                for (let j = 0; j < N; j++) {
+                    const spot = document.createElement('div');
+                    spot.className = 'parking-spot free';
+                    spot.id = `spot-${i}-${j}`;
+                    spot.textContent = 'LIVRE';
+                    spot.onclick = () => mostrarInfoVaga(i, j);
+                    grid.appendChild(spot);
+                }
+            }
+        }
+
+        function definirDataHoraAtual() {
+            const agora = new Date();
+            const data = agora.toISOString().split('T')[0];
+            const hora = agora.toTimeString().split(':').slice(0, 2).join(':');
+            
+            document.getElementById('dataEntrada').value = data;
+            document.getElementById('horaEntrada').value = hora;
+            document.getElementById('dataSaida').value = data;
+            document.getElementById('horaSaida').value = hora;
+        }
+
+        function validarPlaca(placa) {
+            const padrao = /^[A-Z]{3}[0-9][A-Z][0-9]{2}$/;
+            return padrao.test(placa.toUpperCase());
+        }
+
+        function identificarEstado(placa) {
+            const prefixo = placa.substring(0, 3).toUpperCase();
+            
+            for (const [siglaEstado, [inicio, fim]] of Object.entries(prefixosPorEstado)) {
+                if (prefixo >= inicio && prefixo <= fim) {
+                    return siglaEstado;
+                }
+            }
+            return "ND"; // Não Determinado
+        }
+
+        function obterNomeEstado(sigla) {
+            const nomeEstados = {
+                "AC": "Acre", "AL": "Alagoas", "AP": "Amapá", "AM": "Amazonas",
+                "BA": "Bahia", "CE": "Ceará", "DF": "Distrito Federal", "ES": "Espírito Santo",
+                "GO": "Goiás", "MA": "Maranhão", "MT": "Mato Grosso", "MS": "Mato Grosso do Sul",
+                "MG": "Minas Gerais", "PA": "Pará", "PB": "Paraíba", "PR": "Paraná",
+                "PE": "Pernambuco", "PI": "Piauí", "RJ": "Rio de Janeiro", "RN": "Rio Grande do Norte",
+                "RS": "Rio Grande do Sul", "RO": "Rondônia", "RR": "Roraima", "SC": "Santa Catarina",
+                "SP": "São Paulo", "SE": "Sergipe", "TO": "Tocantins", "ND": "Não Determinado"
+            };
+            return nomeEstados[sigla] || "Estado Desconhecido";
+        }
+
+        function identificarRegiao(siglaEstado) {
+            for (const [regiao, estados] of Object.entries(regioesBrasil)) {
+                if (estados.includes(siglaEstado)) {
+                    return regiao;
+                }
+            }
+            return "Região Desconhecida";
+        }
+
+        function obterInfoCompleta(placa) {
+            const siglaEstado = identificarEstado(placa);
+            const nomeEstado = obterNomeEstado(siglaEstado);
+            const regiao = identificarRegiao(siglaEstado);
+            
+            return {
+                sigla: siglaEstado,
+                nome: nomeEstado,
+                regiao: regiao,
+                isSudeste: regiao === "Sudeste",
+                isCentroOeste: regiao === "Centro-Oeste"
+            };
+        }
+
+        function adicionarVeiculo() {
+            const placa = document.getElementById('placaEntrada').value.trim().toUpperCase();
+            const data = document.getElementById('dataEntrada').value;
+            const hora = document.getElementById('horaEntrada').value;
+
+            if (!validarPlaca(placa)) {
+                mostrarMensagem("Placa inválida! Formato correto: LLLNLNN (Ex.: ABC1D23)", "error");
+                return;
+            }
+
+            if (!data || !hora) {
+                mostrarMensagem("Por favor, preencha data e hora de entrada!", "error");
+                return;
+            }
+
+            // Verificar se o veículo já está estacionado
+            for (let i = 0; i < M; i++) {
+                for (let j = 0; j < N; j++) {
+                    if (estacionamento[i][j] && estacionamento[i][j].placa === placa) {
+                        mostrarMensagem("Veículo já está estacionado!", "error");
+                        return;
+                    }
+                }
+            }
+
+            // Encontrar vaga livre
+            for (let i = 0; i < M; i++) {
+                for (let j = 0; j < N; j++) {
+                    if (estacionamento[i][j] === null) {
+                        const entrada = new Date(`${data}T${hora}`);
+                        estacionamento[i][j] = { placa, entrada };
+                        
+                        atualizarVagaVisual(i, j, placa);
+                        mostrarMensagem(`✅ Veículo ${placa} estacionado na posição (${i}, ${j})`, "success");
+                        limparFormularioEntrada();
+                        atualizarEstatisticas();
+                        return;
+                    }
+                }
+            }
+
+            mostrarMensagem("❌ Estacionamento lotado!", "error");
+        }
+
+        function removerVeiculo() {
+            const placa = document.getElementById('placaSaida').value.trim().toUpperCase();
+            const data = document.getElementById('dataSaida').value;
+            const hora = document.getElementById('horaSaida').value;
+
+            if (!placa || !data || !hora) {
+                mostrarMensagem("Preencha todos os campos de saída!", "error");
+                return;
+            }
+
+            for (let i = 0; i < M; i++) {
+                for (let j = 0; j < N; j++) {
+                    if (estacionamento[i][j] && estacionamento[i][j].placa === placa) {
+                        const entrada = estacionamento[i][j].entrada;
+                        const saida = new Date(`${data}T${hora}`);
+                        
+                        if (saida <= entrada) {
+                            mostrarMensagem("Hora de saída deve ser posterior à entrada!", "error");
+                            return;
+                        }
+
+                        const { tempo, valor } = calcularTempoEValor(entrada, saida);
+                        const infoPlaca = obterInfoCompleta(placa);
+                        
+                        emitirTicket(placa, tempo, valor, infoPlaca);
+                        estacionamento[i][j] = null;
+                        
+                        atualizarVagaVisual(i, j, null);
+                        mostrarMensagem(`✅ Veículo ${placa} saiu da posição (${i}, ${j})`, "success");
+                        limparFormularioSaida();
+                        atualizarEstatisticas();
+                        return;
+                    }
+                }
+            }
+
+            mostrarMensagem("❌ Veículo não encontrado no estacionamento", "error");
+        }
+
+        function calcularTempoEValor(entrada, saida) {
+            const deltaMs = saida - entrada;
+            const minutos = deltaMs / (1000 * 60);
+            
+            if (minutos <= 15) {
+                return { tempo: 0, valor: 0.0 }; // Tolerância de 15 minutos
+            }
+
+            const horas = Math.ceil(minutos / 60);
+            let valor;
+
+            if (horas <= 3) {
+                valor = valorAte3h;
+            } else {
+                const extra = horas - 3;
+                valor = valorAte3h + extra * valorPorHoraExtra;
+            }
+
+            return { tempo: horas, valor };
+        }
+
+        function emitirTicket(placa, tempo, valor, infoPlaca) {
+            const ticketContainer = document.getElementById('ticketContainer');
+            
+            // Definir cor baseada na região
+            let corRegiao = '';
+            let iconeRegiao = '';
+            
+            if (infoPlaca.isSudeste) {
+                corRegiao = 'linear-gradient(135deg, #fbb6ce 0%, #f687b3 100%)';
+                iconeRegiao = '🌆';
+            } else if (infoPlaca.isCentroOeste) {
+                corRegiao = 'linear-gradient(135deg, #fef5c7 0%, #fde68a 100%)';
+                iconeRegiao = '🌾';
+            } else {
+                corRegiao = 'linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%)';
+                iconeRegiao = '🗺️';
+            }
+            
+            const ticket = document.createElement('div');
+            ticket.className = 'ticket';
+            ticket.style.background = corRegiao;
+            ticket.innerHTML = `
+                <h4>🎫 TICKET DE ESTACIONAMENTO</h4>
+                <div class="ticket-info">
+                    <div><strong>Placa:</strong><br>${placa}</div>
+                    <div><strong>Estado:</strong><br>${infoPlaca.nome} (${infoPlaca.sigla})</div>
+                    <div><strong>Região:</strong><br>${iconeRegiao} ${infoPlaca.regiao}</div>
+                    <div><strong>Tempo:</strong><br>${tempo} hora(s)</div>
+                    <div><strong>Valor:</strong><br>R$ ${valor.toFixed(2)}</div>
+                    <div style="grid-column: 1 / -1; margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 8px; text-align: center;">
+                        ${infoPlaca.isSudeste ? '<strong>🏢 REGIÃO SUDESTE</strong>' : 
+                          infoPlaca.isCentroOeste ? '<strong>🌾 REGIÃO CENTRO-OESTE</strong>' : 
+                          `<strong>${iconeRegiao} ${infoPlaca.regiao.toUpperCase()}</strong>`}
+                    </div>
+                </div>
+            `;
+            
+            ticketContainer.innerHTML = '';
+            ticketContainer.appendChild(ticket);
+            
+            // Remover ticket após 15 segundos
+            setTimeout(() => {
+                if (ticketContainer.contains(ticket)) {
+                    ticketContainer.removeChild(ticket);
+                }
+            }, 15000);
+        }
+
+        function atualizarVagaVisual(i, j, placa) {
+            const spot = document.getElementById(`spot-${i}-${j}`);
+            
+            if (placa) {
+                spot.className = 'parking-spot occupied';
+                spot.textContent = placa;
+            } else {
+                spot.className = 'parking-spot free';
+                spot.textContent = 'LIVRE';
+            }
+        }
+
+        function mostrarInfoVaga(i, j) {
+            const vaga = estacionamento[i][j];
+            
+            if (vaga) {
+                const entrada = vaga.entrada.toLocaleString('pt-BR');
+                const infoPlaca = obterInfoCompleta(vaga.placa);
+                const iconeRegiao = infoPlaca.isSudeste ? '🌆' : infoPlaca.isCentroOeste ? '🌾' : '🗺️';
+                
+                mostrarMensagem(
+                    `Vaga (${i}, ${j}): ${vaga.placa} - ${infoPlaca.nome} (${infoPlaca.sigla}) - ${iconeRegiao} ${infoPlaca.regiao} - Entrada: ${entrada}`, 
+                    "success"
+                );
+            } else {
+                mostrarMensagem(`Vaga (${i}, ${j}): Livre`, "success");
+            }
+        }
+
+        function atualizarEstatisticas() {
+            let ocupadas = 0;
+            
+            for (let i = 0; i < M; i++) {
+                for (let j = 0; j < N; j++) {
+                    if (estacionamento[i][j] !== null) {
+                        ocupadas++;
+                    }
+                }
+            }
+            
+            const total = M * N;
+            const livres = total - ocupadas;
+            
+            document.getElementById('totalSpots').textContent = total;
+            document.getElementById('occupiedSpots').textContent = ocupadas;
+            document.getElementById('freeSpots').textContent = livres;
+        }
+
+        function mostrarMensagem(texto, tipo) {
+            const container = document.getElementById('messageContainer');
+            
+            const mensagem = document.createElement('div');
+            mensagem.className = `message ${tipo}`;
+            mensagem.textContent = texto;
+            
+            container.innerHTML = '';
+            container.appendChild(mensagem);
+            
+            setTimeout(() => {
+                if (container.contains(mensagem)) {
+                    container.removeChild(mensagem);
+                }
+            }, 5000);
+        }
+
+        function limparFormularioEntrada() {
+            document.getElementById('placaEntrada').value = '';
+            definirDataHoraAtual();
+        }
+
+        function limparFormularioSaida() {
+            document.getElementById('placaSaida').value = '';
+        }
+
+        // Inicializar quando a página carregar
+        window.onload = inicializarInterface;
+    </script>
+</body>
+</html>
