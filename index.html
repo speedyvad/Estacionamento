@@ -166,6 +166,127 @@
             border-color: #e53e3e;
         }
 
+        .parking-spot.occupied-extra {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border-color: #d97706;
+            position: relative;
+        }
+
+        .parking-spot.occupied-extra::after {
+            content: "💰";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 12px;
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .popup-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        .popup-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .popup-header h3 {
+            color: #dc2626;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .popup-body {
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .popup-body ul {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+
+        .popup-body li {
+            margin: 8px 0;
+        }
+
+        .popup-body hr {
+            margin: 20px 0;
+            border: none;
+            border-top: 2px dashed #e5e7eb;
+        }
+
+        .popup-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn-cancelar {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-confirmar {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancelar:hover, .btn-confirmar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .parking-spot.free {
             background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
             color: white;
@@ -522,15 +643,64 @@
                 }
             }
 
+            // Verificar região permitida
+            const infoPlaca = obterInfoCompleta(placa);
+            const regioesPermitidas = ["Sudeste", "Centro-Oeste"];
+            
+            if (!regioesPermitidas.includes(infoPlaca.regiao) && infoPlaca.regiao !== "Região Desconhecida") {
+                mostrarPopupRestricao(placa, infoPlaca, data, hora);
+                return;
+            }
+
+            // Estacionar normalmente
+            estacionarVeiculo(placa, data, hora, false);
+        }
+
+        function mostrarPopupRestricao(placa, infoPlaca, data, hora) {
+            const popup = document.createElement('div');
+            popup.className = 'popup-overlay';
+            popup.innerHTML = `
+                <div class="popup-content">
+                    <div class="popup-header">
+                        <h3>🚫 Restrição de Estacionamento</h3>
+                    </div>
+                    <div class="popup-body">
+                        <p><strong>Que pena! 😔</strong></p>
+                        <p>Você não pode estacionar aqui!</p>
+                        <p>Seu veículo <strong>${placa}</strong> é da região <strong>${infoPlaca.regiao}</strong> (${infoPlaca.nome})</p>
+                        <p>Nosso estabelecimento aceita apenas veículos das regiões:</p>
+                        <ul>
+                            <li>🌆 <strong>Sudeste</strong> (SP, RJ, MG, ES)</li>
+                            <li>🌾 <strong>Centro-Oeste</strong> (DF, GO, MT, MS)</li>
+                        </ul>
+                        <hr>
+                        <p><strong>💰 Opção Especial:</strong></p>
+                        <p>Tem certeza que quer estacionar aqui?</p>
+                        <p>Será cobrada uma <strong>taxa adicional de R$ 10,00</strong></p>
+                    </div>
+                    <div class="popup-buttons">
+                        <button class="btn-cancelar" onclick="fecharPopup()">❌ Cancelar</button>
+                        <button class="btn-confirmar" onclick="confirmarEstacionamento('${placa}', '${data}', '${hora}')">✅ Aceitar Taxa (+R$ 10,00)</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(popup);
+        }
+
+        function estacionarVeiculo(placa, data, hora, taxaExtra = false) {
             // Encontrar vaga livre
             for (let i = 0; i < M; i++) {
                 for (let j = 0; j < N; j++) {
                     if (estacionamento[i][j] === null) {
                         const entrada = new Date(`${data}T${hora}`);
-                        estacionamento[i][j] = { placa, entrada };
+                        estacionamento[i][j] = { placa, entrada, taxaExtra };
                         
-                        atualizarVagaVisual(i, j, placa);
-                        mostrarMensagem(`✅ Veículo ${placa} estacionado na posição (${i}, ${j})`, "success");
+                        atualizarVagaVisual(i, j, placa, taxaExtra);
+                        const mensagem = taxaExtra 
+                            ? `✅ Veículo ${placa} estacionado na posição (${i}, ${j}) com taxa extra de R$ 10,00`
+                            : `✅ Veículo ${placa} estacionado na posição (${i}, ${j})`;
+                        mostrarMensagem(mensagem, "success");
                         limparFormularioEntrada();
                         atualizarEstatisticas();
                         return;
@@ -539,6 +709,18 @@
             }
 
             mostrarMensagem("❌ Estacionamento lotado!", "error");
+        }
+
+        function confirmarEstacionamento(placa, data, hora) {
+            fecharPopup();
+            estacionarVeiculo(placa, data, hora, true);
+        }
+
+        function fecharPopup() {
+            const popup = document.querySelector('.popup-overlay');
+            if (popup) {
+                popup.remove();
+            }
         }
 
         function removerVeiculo() {
@@ -580,12 +762,13 @@
             mostrarMensagem("❌ Veículo não encontrado no estacionamento", "error");
         }
 
-        function calcularTempoEValor(entrada, saida) {
+        function calcularTempoEValor(entrada, saida, taxaExtra = false) {
             const deltaMs = saida - entrada;
             const minutos = deltaMs / (1000 * 60);
             
             if (minutos <= 15) {
-                return { tempo: 0, valor: 0.0 }; // Tolerância de 15 minutos
+                // Mesmo com tolerância, aplicar taxa extra se houver
+                return { tempo: 0, valor: taxaExtra ? 10.0 : 0.0 };
             }
 
             const horas = Math.ceil(minutos / 60);
@@ -598,10 +781,15 @@
                 valor = valorAte3h + extra * valorPorHoraExtra;
             }
 
+            // Adicionar taxa extra se aplicável
+            if (taxaExtra) {
+                valor += 10.0;
+            }
+
             return { tempo: horas, valor };
         }
 
-        function emitirTicket(placa, tempo, valor, infoPlaca) {
+        function emitirTicket(placa, tempo, valor, infoPlaca, taxaExtra = false) {
             const ticketContainer = document.getElementById('ticketContainer');
             
             // Definir cor baseada na região
@@ -615,8 +803,8 @@
                 corRegiao = 'linear-gradient(135deg, #fef5c7 0%, #fde68a 100%)';
                 iconeRegiao = '🌾';
             } else {
-                corRegiao = 'linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%)';
-                iconeRegiao = '🗺️';
+                corRegiao = 'linear-gradient(135deg, #fed7d7 0%, #fca5a5 100%)'; // Vermelho para outras regiões
+                iconeRegiao = '🚫';
             }
             
             const ticket = document.createElement('div');
@@ -629,11 +817,13 @@
                     <div><strong>Estado:</strong><br>${infoPlaca.nome} (${infoPlaca.sigla})</div>
                     <div><strong>Região:</strong><br>${iconeRegiao} ${infoPlaca.regiao}</div>
                     <div><strong>Tempo:</strong><br>${tempo} hora(s)</div>
-                    <div><strong>Valor:</strong><br>R$ ${valor.toFixed(2)}</div>
-                    <div style="grid-column: 1 / -1; margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 8px; text-align: center;">
+                    <div><strong>Valor Base:</strong><br>R$ ${taxaExtra ? (valor - 10).toFixed(2) : valor.toFixed(2)}</div>
+                    ${taxaExtra ? '<div><strong>Taxa Extra:</strong><br>💰 R$ 10,00</div>' : '<div></div>'}
+                    <div><strong>Total:</strong><br>💵 R$ ${valor.toFixed(2)}</div>
+                    <div style="grid-column: 1 / -1; margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: center;">
                         ${infoPlaca.isSudeste ? '<strong>🏢 REGIÃO SUDESTE</strong>' : 
                           infoPlaca.isCentroOeste ? '<strong>🌾 REGIÃO CENTRO-OESTE</strong>' : 
-                          `<strong>${iconeRegiao} ${infoPlaca.regiao.toUpperCase()}</strong>`}
+                          `<strong>🚫 ${infoPlaca.regiao.toUpperCase()} ${taxaExtra ? '(TAXA EXTRA APLICADA)' : ''}</strong>`}
                     </div>
                 </div>
             `;
@@ -649,15 +839,19 @@
             }, 15000);
         }
 
-        function atualizarVagaVisual(i, j, placa) {
+        function atualizarVagaVisual(i, j, placa, taxaExtra = false) {
             const spot = document.getElementById(`spot-${i}-${j}`);
             
             if (placa) {
-                spot.className = 'parking-spot occupied';
+                spot.className = taxaExtra ? 'parking-spot occupied-extra' : 'parking-spot occupied';
                 spot.textContent = placa;
+                if (taxaExtra) {
+                    spot.title = 'Veículo com taxa extra (R$ 10,00)';
+                }
             } else {
                 spot.className = 'parking-spot free';
                 spot.textContent = 'LIVRE';
+                spot.title = '';
             }
         }
 
